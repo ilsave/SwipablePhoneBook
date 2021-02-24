@@ -194,6 +194,7 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
             xmDown = 0
         }
 
+
         if (((xmUp - xmDown) > 100) && this.viewState == ViewState.SWIPED_LEFT && xmDown != 0 && xmUp != 0 ){
             Log.d("IlsaveImportant", "You swiped Right! xUp = ${xUp} xDown = $xDown xUp - xDown = ${(xUp - xDown)}  xUpCustom = $xmUp xDowncustom = $xmDown xUp - xDown = ${(xmUp - xmDown)} ")
             this.viewState = ViewState.DEFAULT_FROM_LEFT
