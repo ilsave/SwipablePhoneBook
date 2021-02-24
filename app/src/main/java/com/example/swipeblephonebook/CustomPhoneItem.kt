@@ -2,12 +2,15 @@ package com.example.swipeblephonebook
 
 import android.animation.ValueAnimator
 import android.content.Context
+import android.content.res.Resources
 import android.graphics.*
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import android.view.animation.DecelerateInterpolator
-import java.lang.Math.abs
+
 
 class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appcompat.widget.AppCompatTextView(context, attributes) {
 
@@ -23,12 +26,19 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
     }
     private lateinit var valueAnimator: ValueAnimator
 
-
-    private var icon: Bitmap = BitmapFactory.decodeResource(context.resources, R.drawable.ic_baseline_call_24)
+    private var viewState: ViewState = ViewState.DEFAULT
+    private var icon = resources.getDrawable(R.drawable.ic_baseline_call_24)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private var circleColor = DEFAULT_CIRCLE_COLOR
     private var borderColor = DEFAULT_BORDER_COLOR
     private var borderWidth = DEFAULT_BORDER_WIDTH
+
+    private var xmDown = 0
+    private var ymDown = 0
+    private var xmUp = 0
+    private var ymUp = 0
+
+
     private var size = 320
     private var weight = 0
     set(value){
@@ -48,6 +58,21 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
         setupAttributes(attributes)
     }
 
+    fun drawableToBitmap(drawable: Drawable): Bitmap? {
+        if (drawable is BitmapDrawable) {
+            return drawable.bitmap
+        }
+        val bitmap = Bitmap.createBitmap(
+            drawable.intrinsicWidth,
+            drawable.intrinsicHeight,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        return bitmap
+    }
+
     private fun setupAttributes(attrs: AttributeSet?) {
         val typedArray = context.theme.obtainStyledAttributes(attrs, R.styleable.CustomAttribute,
             0, 0)
@@ -55,11 +80,11 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
     }
 
     override fun onDraw(canvas: Canvas?) {
-        drawCirle(canvas)
         super.onDraw(canvas)
+        drawCirle(canvas)
         if (this::valueAnimator.isInitialized) {
             if (valueAnimator.isRunning) {
-                setBackgroundResource(R.drawable.ic_baseline_call_24)
+              //  setBackgroundResource(R.drawable.ic_baseline_call_24)
             }
         }
     }
@@ -76,9 +101,20 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
 
     fun drawCirle(canvas: Canvas?){
        paint.style = Paint.Style.FILL
+        paint.color = Color.BLUE
         canvas?.drawRect(0f,0f, weight.toFloat(), measuredHeight.toFloat(), paint)
-        canvas?.drawBitmap(icon, 0f, 0f, paint)
+        if (this.viewState == ViewState.SWIPED_RIGHT){
+            canvas?.drawBitmap(drawableToBitmap(icon)!!, (measuredWidth/2.2).toFloat(), (measuredHeight/2.2).toFloat(), paint)
+        }
 
+
+
+
+//        if (this.viewState == ViewState.SWIPED_LEFT){
+//            canvas?.drawRect(weight.toFloat(),0f, measuredWidth.toFloat(), measuredHeight.toFloat(), paint)
+////            canvas?.drawBitmap(drawableToBitmap(icon)!!, (weight/2).toFloat(), measuredHeight.toFloat(), paint)
+//            canvas?.drawBitmap(drawableToBitmap(icon)!!, (measuredWidth/2.2).toFloat(), (measuredHeight/2.2).toFloat(), paint)
+//        }
     }
 
 
@@ -88,22 +124,25 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
 
         when(event.action){
             MotionEvent.ACTION_UP -> {
-                Log.d("IlsaveUp", " x = ${event.x}  y = ${event.y}")
+                Log.d("IlsaveUp", " x = ${event.x} xUpCustom = $xmUp y = ${event.y}")
                 xUp = event.x.toInt()
+                xmUp = event.x.toInt()
                 yUp = event.y.toInt()
             }
             MotionEvent.ACTION_MOVE ->{
                 Log.d("IlsaveMove", " x = ${event.x}  y = ${event.y}")
             }
             MotionEvent.ACTION_DOWN -> {
-                Log.d("IlsaveDown", " x = ${event.x}  y = ${event.y}")
+                Log.d("IlsaveDown", " x = ${event.x} xDowncustom = $xmDown y = ${event.y}")
+                xmDown = event.x.toInt()
                 xDown = event.x.toInt()
                 yDown = event.y.toInt()
             }
         }
-        if (abs(xUp - xDown) > 100){
-            Log.d("Ilsave", "You swiped! ${abs(xUp - xDown)}")
+        if (((xmUp - xmDown) > 100) && this.viewState == ViewState.DEFAULT && xmDown != 0 && xmUp != 0 ){
+            Log.d("Ilsave", "You swiped Right! xUp = ${xUp} xDown = $xDown xUp - xDown = ${(xUp - xDown)}  xUpCustom = $xmUp xDowncustom = $xmDown xUp - xDown = ${(xmUp - xmDown)} ")
 
+            this.viewState = ViewState.SWIPED_RIGHT
             valueAnimator = ValueAnimator.ofInt(0, measuredWidth)
             valueAnimator.duration = 1000
             valueAnimator.interpolator = DecelerateInterpolator()
@@ -112,7 +151,57 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
                  weight = activeRadius
             }
             valueAnimator.start()
+            xmUp = 0
+            xmDown = 0
         }
+        if ((xmDown - xmUp) > 100 && this.viewState == ViewState.SWIPED_RIGHT && xmDown != 0 && xmUp != 0 ){
+            Log.d("Ilsave", "You swiped Left! xUp = ${xUp} xDown = $xDown    xDown - xUp =  ${(xDown - xUp)}   xUpCustom = $xmUp xDowncustom = $xmDown xDown - xUp = ${(xmDown - xmUp)} ")
+
+            valueAnimator = ValueAnimator.ofInt(measuredWidth, 0)
+            valueAnimator.duration = 1000
+            valueAnimator.interpolator = DecelerateInterpolator()
+            valueAnimator.addUpdateListener {
+                val activeRadius = valueAnimator.animatedValue as Int
+                weight = activeRadius
+            }
+            valueAnimator.start()
+            this.viewState = ViewState.DEFAULT
+            xmUp = 0
+            xmDown = 0
+        }
+
+//        if ((xmDown - xmUp) > 100 && this.viewState == ViewState.DEFAULT && xmDown != 0 && xmUp != 0 ){
+//            Log.d("Ilsave", "You swiped Left! xUp = ${xUp} xDown = $xDown    xDown - xUp =  ${(xDown - xUp)}   xUpCustom = $xmUp xDowncustom = $xmDown xDown - xUp = ${(xmDown - xmUp)} ")
+//
+//            valueAnimator = ValueAnimator.ofInt(measuredWidth, 0)
+//            valueAnimator.duration = 1000
+//            valueAnimator.interpolator = DecelerateInterpolator()
+//            valueAnimator.addUpdateListener {
+//                val activeRadius = valueAnimator.animatedValue as Int
+//                weight = activeRadius
+//            }
+//            valueAnimator.start()
+//            this.viewState = ViewState.SWIPED_LEFT
+//            xmUp = 0
+//            xmDown = 0
+//        }
+//
+//        if (((xmUp - xmDown) > 100) && this.viewState == ViewState.SWIPED_LEFT && xmDown != 0 && xmUp != 0 ){
+//            Log.d("Ilsave", "You swiped Right! xUp = ${xUp} xDown = $xDown xUp - xDown = ${(xUp - xDown)}  xUpCustom = $xmUp xDowncustom = $xmDown xUp - xDown = ${(xmUp - xmDown)} ")
+//
+//            valueAnimator = ValueAnimator.ofInt(0, measuredWidth)
+//            valueAnimator.duration = 1000
+//            valueAnimator.interpolator = DecelerateInterpolator()
+//            valueAnimator.addUpdateListener {
+//                val activeRadius = valueAnimator.animatedValue as Int
+//                weight = activeRadius
+//            }
+//            valueAnimator.start()
+//            this.viewState = ViewState.DEFAULT
+//            xmUp = 0
+//            xmDown = 0
+//        }
+
         return true
     }
 }
