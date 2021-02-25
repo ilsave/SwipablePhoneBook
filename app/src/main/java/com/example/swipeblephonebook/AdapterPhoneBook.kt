@@ -16,6 +16,8 @@ class AdapterPhoneBook(private val list: List<Person>)
         return ItemsHolder(view)
     }
 
+    private var onItemClickListener: ((Person) -> Unit)? = null
+
     override fun getItemCount(): Int = list.size
 
     override fun onBindViewHolder(holder: ItemsHolder, position: Int) {
@@ -23,5 +25,12 @@ class AdapterPhoneBook(private val list: List<Person>)
         holder.itemView.apply {
             findViewById<CustomPhoneItem>(R.id.tvName).text = currentItem.name
         }
+        setOnItemClickListener { person ->
+            onItemClickListener?.let { it(person) }
+        }
+    }
+
+    fun setOnItemClickListener(listener: (Person) -> Unit) {
+        onItemClickListener = listener
     }
 }
