@@ -1,3 +1,3 @@
 package com.example.swipeblephonebook
 
-data class Person(val name: String)
+data class Person(var name: String? = null, var number: String? = null)
