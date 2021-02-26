@@ -2,11 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.swipeblephonebook">
 
-    <uses-permission
-        android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
-
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+    <uses-permission android:name="com.swtecnn.contentproviderlesson.READ_DATABASE" />
+    <uses-permission android:name="com.swtecnn.contentproviderlesson.WRITE_DATABASE" />
 
     <application
         android:allowBackup="true"
