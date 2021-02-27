@@ -8,8 +8,6 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
-import android.view.animation.AccelerateDecelerateInterpolator
-import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
 import java.lang.Math.abs
 
@@ -25,9 +23,12 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
     private var xmDown = 0
+    private var ymDown = 0
     private var xmUp = 0
+    private var ymUp = 0
 
 
+    private var size = 320
     private var weight = 0
     set(value){
         field = value
@@ -77,6 +78,8 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
 
     fun drawCirle(canvas: Canvas?){
        paint.style = Paint.Style.FILL
+        paint.color = Color.BLUE
+
         if (this.viewState == ViewState.SWIPED_RIGHT){
             paint.color = Color.GREEN
             canvas?.drawRect(0f,0f, weight.toFloat(), measuredHeight.toFloat(), paint)
@@ -86,7 +89,7 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
         if (this.viewState == ViewState.DEFAULT && this.viewStateAroundDefault == ViewStateAroundDefault.FROM_LEFT_TO_DEFAULT){
             paint.color = Color.GREEN
             canvas?.drawRect(0f,0f, weight.toFloat(), measuredHeight.toFloat(), paint)
-            if ((weight/2) > measuredWidth*0.1){
+            if ((width/2).toInt() > (measuredWidth/3).toInt() ){
                 Log.d("IlsaveMat", "wight ${weight/2} measured ${measuredWidth/2}     ${(width/2) == (measuredWidth/2)}")
                 canvas?.drawBitmap(drawableToBitmap(iconCall)!!, (weight/2).toFloat(), (measuredHeight/2).toFloat(), paint)
             }
@@ -94,15 +97,7 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
 
         if (this.viewState == ViewState.DEFAULT && this.viewStateAroundDefault == ViewStateAroundDefault.FROM_RIGHT_TO_DEFAULT){
             paint.color = Color.RED
-            Log.d("IlsaveInfo","You are here!")
-            //measuredWight .. 0
             canvas?.drawRect(weight.toFloat(),0f, measuredWidth.toFloat(), measuredHeight.toFloat(), paint)
-            if (weight  < measuredWidth/2){
-                Log.d("IlsaveNotMat", " $weight  $measuredWidth")
-                canvas?.drawBitmap(drawableToBitmap(iconMessage)!!, (measuredWidth/2).toFloat(), (measuredHeight/2).toFloat(), paint)
-            }else {
-                canvas?.drawBitmap(drawableToBitmap(iconMessage)!!, (weight).toFloat(), (measuredHeight/2).toFloat(), paint)
-            }
         }
 
         if (this.viewState == ViewState.SWIPED_LEFT){
@@ -126,18 +121,16 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
                 Log.d("IlsaveUp", " x = ${event.x} xUpCustom = $xmUp y = ${event.y}")
                 xUp = event.x.toInt()
                 xmUp = event.x.toInt()
+                yUp = event.y.toInt()
             }
             MotionEvent.ACTION_MOVE ->{
                 Log.d("IlsaveMove", " x = ${event.x}  y = ${event.y}")
-            }
-            MotionEvent.ACTION_CANCEL -> {
-                xmUp = 0
-                xmDown = 0
             }
             MotionEvent.ACTION_DOWN -> {
                 Log.d("IlsaveDown", " x = ${event.x} xDowncustom = $xmDown y = ${event.y}")
                 xmDown = event.x.toInt()
                 xDown = event.x.toInt()
+                yDown = event.y.toInt()
             }
         }
         if (((xmUp - xmDown) > 100) && this.viewState == ViewState.DEFAULT && xmDown != 0 && xmUp != 0 ){
@@ -148,7 +141,8 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
             valueAnimator.duration = 1000
             valueAnimator.interpolator = DecelerateInterpolator()
             valueAnimator.addUpdateListener {
-                weight = valueAnimator.animatedValue as Int
+                val activeRadius = valueAnimator.animatedValue as Int
+                 weight = activeRadius
             }
             valueAnimator.start()
             xmUp = 0
@@ -162,7 +156,8 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
             valueAnimator.duration = 1000
             valueAnimator.interpolator = DecelerateInterpolator()
             valueAnimator.addUpdateListener {
-                weight = valueAnimator.animatedValue as Int
+                val activeRadius = valueAnimator.animatedValue as Int
+                weight = activeRadius
             }
             valueAnimator.start()
 
@@ -175,9 +170,10 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
 
             valueAnimator = ValueAnimator.ofInt(measuredWidth, 0)
             valueAnimator.duration = 1000
-            valueAnimator.interpolator = AccelerateInterpolator()
+            valueAnimator.interpolator = DecelerateInterpolator()
             valueAnimator.addUpdateListener {
-                weight = valueAnimator.animatedValue as Int
+                val activeRadius = valueAnimator.animatedValue as Int
+                weight = activeRadius
             }
             valueAnimator.start()
             this.viewState = ViewState.SWIPED_LEFT
@@ -194,7 +190,8 @@ class CustomPhoneItem(context: Context, attributes: AttributeSet): androidx.appc
             valueAnimator.duration = 1000
             valueAnimator.interpolator = DecelerateInterpolator()
             valueAnimator.addUpdateListener {
-                weight = valueAnimator.animatedValue as Int
+                val activeRadius = valueAnimator.animatedValue as Int
+                weight = activeRadius
             }
             valueAnimator.start()
             xmUp = 0
